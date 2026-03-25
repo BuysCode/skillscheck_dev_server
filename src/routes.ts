@@ -1,6 +1,6 @@
 import { Router } from "express";
 import prisma from "./prisma";
-import { compare } from "bcrypt";
+import { compare, hashSync } from "bcrypt";
 import * as jwt from "jsonwebtoken";
 
 const router = Router();
@@ -18,15 +18,17 @@ router.post('/signup', async (req, res) => {
 		return res.status(401).json({ message: 'User already exists' });
 	}
 
-	await prisma.user.create({
+	const hashedPassword = hashSync(password, 12)
+
+	const newUser = await prisma.user.create({
 		data: {
 			name,
 			email,
-			password,
+			password: hashedPassword,
 		}
 	})
 
-	const token = jwt.sign({ id: user.id }, 'UmaSenhaSuperSecreta', { expiresIn: '1h' });
+	const token = jwt.sign({ id: newUser.id }, String(process.env.JWT_SECRET!), { expiresIn: '1h' });
 
 	const isProd = process.env.NODE_ENV === 'production'
 
@@ -63,7 +65,7 @@ router.post('/signin', async (req, res) => {
 		return res.status(401).json({ message: 'Invalid email or password' });
 	}
 
-	const token = jwt.sign({ id: user.id }, 'UmaSenhaSuperSecreta', { expiresIn: '1h' });
+	const token = jwt.sign({ id: user.id }, String(process.env.JWT_SECRET!), { expiresIn: '1h' });
 
 	const isProd = process.env.NODE_ENV === 'production'
 
@@ -87,7 +89,7 @@ router.get('/profile', async (req, res) => {
 	}
 
 	try {
-		const decoded = jwt.verify(token, 'UmaSenhaSuperSecreta');
+		const decoded = jwt.verify(token, String(process.env.JWT_SECRET!));
 
 		const user = await prisma.user.findFirst({
 			where: {
