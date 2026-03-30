@@ -15,6 +15,11 @@ app.use(cors({
 
 app.use(router)
 
-app.listen(port, () => {
-	console.log(`Server is running on http://localhost:${port}`);
-});
+export default app;
+
+// For local development
+if (require.main === module) {
+	app.listen(port, () => {
+		console.log(`Server is running on http://localhost:${port}`);
+	});
+}

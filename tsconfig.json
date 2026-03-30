@@ -3,6 +3,8 @@
   "_version": "24.0.0",
 
   "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
     "lib": [
       "es2024",
       "ESNext.Array",
@@ -11,6 +13,13 @@
       "ESNext.Iterator",
       "ESNext.Promise"
     ],
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "ignoreDeprecations": "6.0",
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
 
     "paths": {
       "@/*": ["./src/*"]
