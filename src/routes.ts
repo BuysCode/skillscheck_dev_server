@@ -32,18 +32,23 @@ router.post('/signup', async (req, res) => {
 
 	const isProd = process.env.NODE_ENV === 'production'
 
-	res.cookie('session_token', token, {
+	const cookieOptions: any = {
 		httpOnly: true,
-		secure: isProd, // true em produção com HTTPS
-		sameSite: isProd ? 'none' : 'lax', // 'none' em produção com HTTPS
-		maxAge: 60 * 60 * 1000, // 1 hora
-		path: '/',
-		domain: isProd ? '.seu-dominio.com' : 'localhost' // ajuste conforme necessário
-	})
+		secure: isProd,
+		sameSite: isProd ? 'none' : 'lax',
+		maxAge: 60 * 60 * 1000,
+		path: '/'
+	}
 
-	return res.json({
+	if (isProd && process.env.COOKIE_DOMAIN) {
+		cookieOptions.domain = process.env.COOKIE_DOMAIN;
+	}
+
+	res.cookie('session_token', token, cookieOptions);
+
+	return res.status(200).json({
 		message: "User created and logged in successfully"
-	}).status(200);
+	});
 });
 
 router.post('/signin', async (req, res) => {
@@ -69,16 +74,21 @@ router.post('/signin', async (req, res) => {
 
 	const isProd = process.env.NODE_ENV === 'production'
 
-	res.cookie('session_token', token, {
+	const cookieOptions: any = {
 		httpOnly: true,
-		secure: isProd, // true em produção com HTTPS
-		sameSite: isProd ? 'none' : 'lax', // 'none' em produção com HTTPS
-		maxAge: 60 * 60 * 1000, // 1 hora
-		path: '/',
-		domain: isProd ? '.seu-dominio.com' : 'localhost' // ajuste conforme necessário
-	})
+		secure: isProd,
+		sameSite: isProd ? 'none' : 'lax',
+		maxAge: 60 * 60 * 1000,
+		path: '/'
+	}
 
-	res.json({ user });
+	if (isProd && process.env.COOKIE_DOMAIN) {
+		cookieOptions.domain = process.env.COOKIE_DOMAIN;
+	}
+
+	res.cookie('session_token', token, cookieOptions);
+
+	res.status(200).json({ user });
 });
 
 router.get('/profile', async (req, res) => {
