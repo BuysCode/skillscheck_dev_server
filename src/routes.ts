@@ -6,7 +6,7 @@ import * as jwt from "jsonwebtoken";
 const router = Router();
 
 router.post('/signup', async (req, res) => {
-	const { name, email, password } = req.body as {name: string; password: string; email: string};
+	const { name, email, password } = req.body as { name: string; password: string; email: string };
 
 	const user = await prisma.user.findFirst({
 		where: {
@@ -28,20 +28,16 @@ router.post('/signup', async (req, res) => {
 		}
 	})
 
-	const token = jwt.sign({ id: newUser.id }, String(process.env.JWT_SECRET!), { expiresIn: '1h' });
+	const token = jwt.sign({ id: newUser.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
 
 	const isProd = process.env.NODE_ENV === 'production'
 
 	const cookieOptions: any = {
 		httpOnly: true,
-		secure: isProd,
-		sameSite: isProd ? 'none' : 'lax',
-		maxAge: 60 * 60 * 1000,
+		secure: true,
+		sameSite: "none",
+		maxAge: 60 * 60 * 1000 * 24 * 30,
 		path: '/'
-	}
-
-	if (isProd && process.env.COOKIE_DOMAIN) {
-		cookieOptions.domain = process.env.COOKIE_DOMAIN;
 	}
 
 	res.cookie('session_token', token, cookieOptions);
@@ -70,20 +66,14 @@ router.post('/signin', async (req, res) => {
 		return res.status(401).json({ message: 'Invalid email or password' });
 	}
 
-	const token = jwt.sign({ id: user.id }, String(process.env.JWT_SECRET!), { expiresIn: '1h' });
-
-	const isProd = process.env.NODE_ENV === 'production'
+	const token = jwt.sign({ id: user.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
 
 	const cookieOptions: any = {
 		httpOnly: true,
-		secure: isProd,
-		sameSite: isProd ? 'none' : 'lax',
-		maxAge: 60 * 60 * 1000,
+		secure: true,
+		sameSite: "none",
+		maxAge: 60 * 60 * 1000 * 24 * 30,
 		path: '/'
-	}
-
-	if (isProd && process.env.COOKIE_DOMAIN) {
-		cookieOptions.domain = process.env.COOKIE_DOMAIN;
 	}
 
 	res.cookie('session_token', token, cookieOptions);
@@ -110,7 +100,7 @@ router.get('/profile', async (req, res) => {
 		if (!user) {
 			return res.status(401).json({ message: 'Unauthorized' });
 		}
-		
+
 		res.json(user);
 	} catch (error) {
 		return res.status(401).json({ message: 'Unauthorized' });
