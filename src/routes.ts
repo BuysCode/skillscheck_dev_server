@@ -72,7 +72,8 @@ router.post('/signin', async (req, res) => {
 		secure: true,
 		sameSite: "none",
 		maxAge: 60 * 60 * 1000 * 24 * 30,
-		path: '/'
+		path: '/',
+		partitioned: true
 	}
 
 	res.cookie('session_token', token, cookieOptions);
