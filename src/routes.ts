@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type CookieOptions } from "express";
 import prisma from "./prisma";
 import { compare, hashSync } from "bcrypt";
 import * as jwt from "jsonwebtoken";
@@ -30,14 +30,13 @@ router.post('/signup', async (req, res) => {
 
 	const token = jwt.sign({ id: newUser.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
 
-	const isProd = process.env.NODE_ENV === 'production'
-
-	const cookieOptions: any = {
+	const cookieOptions: CookieOptions = {
 		httpOnly: true,
 		secure: true,
 		sameSite: "none",
 		maxAge: 60 * 60 * 1000 * 24 * 30,
-		path: '/'
+		path: '/',
+		partitioned: true
 	}
 
 	res.cookie('session_token', token, cookieOptions);
@@ -68,7 +67,7 @@ router.post('/signin', async (req, res) => {
 
 	const token = jwt.sign({ id: user.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
 
-	const cookieOptions: any = {
+	const cookieOptions: CookieOptions = {
 		httpOnly: true,
 		secure: true,
 		sameSite: "none",
