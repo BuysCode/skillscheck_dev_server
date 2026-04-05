@@ -39,7 +39,7 @@ router.post('/signup', async (req, res) => {
 		partitioned: true
 	}
 
-	res.cookie('session_token', token, cookieOptions);
+	res.cookie('session_token', token, cookieOptions as any);
 
 	return res.status(200).json({
 		message: "User created and logged in successfully"
@@ -76,7 +76,7 @@ router.post('/signin', async (req, res) => {
 		partitioned: true
 	}
 
-	res.cookie('session_token', token, cookieOptions);
+	res.cookie('session_token', token, cookieOptions as any);
 
 	res.status(200).json({ user });
 });
