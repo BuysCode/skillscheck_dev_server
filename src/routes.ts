@@ -30,7 +30,7 @@ router.post('/signup', async (req, res) => {
 
 	const token = jwt.sign({ id: newUser.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
 
-	const cookieOptions: CookieOptions = {
+	const cookieOptions: any = {
 		httpOnly: true,
 		secure: true,
 		sameSite: "none",
@@ -67,7 +67,7 @@ router.post('/signin', async (req, res) => {
 
 	const token = jwt.sign({ id: user.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
 
-	const cookieOptions: CookieOptions = {
+	const cookieOptions: any = {
 		httpOnly: true,
 		secure: true,
 		sameSite: "none",
