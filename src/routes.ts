@@ -1,12 +1,12 @@
-import { Router, type CookieOptions } from "express";
+import { Router } from "express";
 import prisma from "./prisma";
 import { compare, hashSync } from "bcrypt";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const router = Router();
 
-router.post('/signup', async (req, res) => {
-	const { name, email, password } = req.body as { name: string; password: string; email: string };
+router.post('/sign_up', async (req, res) => {
+	const { email, username, password } = req.body;
 
 	const user = await prisma.user.findFirst({
 		where: {
@@ -18,35 +18,32 @@ router.post('/signup', async (req, res) => {
 		return res.status(401).json({ message: 'User already exists' });
 	}
 
-	const hashedPassword = hashSync(password, 12)
-
 	const newUser = await prisma.user.create({
 		data: {
-			name,
 			email,
-			password: hashedPassword,
+			name: username,
+			password: hashSync(password, 12)
 		}
 	})
 
-	const token = jwt.sign({ id: newUser.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
+	const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
 
-	const cookieOptions: any = {
+	const isProd = process.env.NODE_ENV === 'production'
+
+	res.cookie('session_token', token, {
 		httpOnly: true,
-		secure: true,
-		sameSite: "none",
+		secure: isProd,
+		sameSite: 'none',
 		maxAge: 60 * 60 * 1000 * 24 * 30,
 		path: '/',
+		domain: isProd ? 'skillscheck-dev-server.vercel.app' : 'localhost',
 		partitioned: true
-	}
+	})
 
-	res.cookie('session_token', token, cookieOptions as any);
-
-	return res.status(200).json({
-		message: "User created and logged in successfully"
-	});
+	res.json({ user });
 });
 
-router.post('/signin', async (req, res) => {
+router.post('/login', async (req, res) => {
 	const { email, password } = req.body;
 
 	const user = await prisma.user.findFirst({
@@ -65,20 +62,21 @@ router.post('/signin', async (req, res) => {
 		return res.status(401).json({ message: 'Invalid email or password' });
 	}
 
-	const token = jwt.sign({ id: user.id }, String(process.env.JWT_SECRET!), { expiresIn: '30d' });
+	const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
 
-	const cookieOptions: any = {
+	const isProd = process.env.NODE_ENV === 'production'
+
+	res.cookie('session_token', token, {
 		httpOnly: true,
-		secure: true,
-		sameSite: "none",
+		secure: isProd,
+		sameSite: 'none',
 		maxAge: 60 * 60 * 1000 * 24 * 30,
 		path: '/',
+		domain: isProd ? 'skillscheck-dev-server.vercel.app' : 'localhost',
 		partitioned: true
-	}
+	})
 
-	res.cookie('session_token', token, cookieOptions as any);
-
-	res.status(200).json({ user });
+	res.json({ user });
 });
 
 router.get('/profile', async (req, res) => {
@@ -89,7 +87,7 @@ router.get('/profile', async (req, res) => {
 	}
 
 	try {
-		const decoded = jwt.verify(token, String(process.env.JWT_SECRET!));
+		const decoded = jwt.verify(token, 'UmaSenhaSuperSecreta');
 
 		const user = await prisma.user.findFirst({
 			where: {
@@ -111,9 +109,5 @@ router.post('/logout', (req, res) => {
 	res.clearCookie('session_token')
 	res.json({ message: 'Logged out successfully' });
 });
-
-router.get("/", (_req, res) => {
-	return res.send({ message: "Olá! Seja bem-vindo ao servidor do projeto SkillsCheck Dev" }).status(200)
-})
 
 export default router;
