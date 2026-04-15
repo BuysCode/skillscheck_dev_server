@@ -28,19 +28,7 @@ router.post('/sign_up', async (req, res) => {
 
 	const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
 
-	const isProd = process.env.NODE_ENV === 'production'
-
-	res.cookie('session_token', token, {
-		httpOnly: true,
-		secure: isProd,
-		sameSite: 'none',
-		maxAge: 60 * 60 * 1000 * 24 * 30,
-		path: '/',
-		domain: isProd ? 'skillscheck-dev-server.vercel.app' : 'localhost',
-		partitioned: true
-	})
-
-	res.json({ user });
+	res.json({ user, token });
 });
 
 router.post('/login', async (req, res) => {
@@ -64,50 +52,33 @@ router.post('/login', async (req, res) => {
 
 	const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
 
-	const isProd = process.env.NODE_ENV === 'production'
-
-	res.cookie('session_token', token, {
-		httpOnly: true,
-		secure: isProd,
-		sameSite: 'none',
-		maxAge: 60 * 60 * 1000 * 24 * 30,
-		path: '/',
-		domain: isProd ? 'skillscheck-dev-server.vercel.app' : 'localhost',
-		partitioned: true
-	})
-
-	res.json({ user });
+	res.json({ user, token });
 });
 
 router.get('/profile', async (req, res) => {
-	const token = req.cookies['session_token']
+	const authHeader = req.headers['authorization'];
+	const splittedAuthorization = authHeader?.split(' ') as string[]
+	const token = splittedAuthorization[1];
 
 	if (!token) {
 		return res.status(401).json({ message: 'Unauthorized' });
 	}
 
 	try {
-		const decoded = jwt.verify(token, 'UmaSenhaSuperSecreta');
+		const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
 		const user = await prisma.user.findFirst({
-			where: {
-				id: (decoded as any).id
-			}
+			where: { id: decoded.id },
+			omit: { password: true }
 		});
 
 		if (!user) {
 			return res.status(401).json({ message: 'Unauthorized' });
 		}
-
 		res.json(user);
 	} catch (error) {
 		return res.status(401).json({ message: 'Unauthorized' });
 	}
-});
-
-router.post('/logout', (req, res) => {
-	res.clearCookie('session_token')
-	res.json({ message: 'Logged out successfully' });
 });
 
 export default router;
